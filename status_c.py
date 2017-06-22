@@ -9,7 +9,7 @@ from lib import IN_NAME, IN_SNILS, IN_STAT, OUT_NAME, OUT_STAT
 
 workbooks =  []
 sheets = []
-for i, xlsx_file in enumerate(sys.argv):
+for i, xlsx_file in enumerate(sys.argv):                              # Загружаем все xlsx файлы
     if i == 0:
         continue
     workbooks.append(openpyxl.load_workbook(filename=xlsx_file, read_only=True))
@@ -19,14 +19,14 @@ for i, xlsx_file in enumerate(sys.argv):
 #            g=0
 
 sheets_keys = []
-for i, sheet in enumerate(sheets):
+for i, sheet in enumerate(sheets):                                    # Маркируем нужные столбцы
     keys = {}
     for j, row in enumerate(sheet.rows):
         if j > 0:
             break
         for k, cell in enumerate(row):
             if cell.value in IN_SNILS:
-                keys['СНИЛС'] = k
+                keys[IN_SNILS[0]] = k
         if len(keys) > 0:
             for k, cell in enumerate(row):
                 for name in IN_NAME:
@@ -39,15 +39,24 @@ for i, sheet in enumerate(sheets):
             sys.exit()
     sheets_keys.append(keys)
 
-
-for i, sheet in enumerate(sheets):
+for j, row in enumerate(sheets[0].rows):                     # Загружаем все входные данные в одну строку
+    if j == 0:
+        continue
     big_row = {}
-    for j, row in enumerate(sheet.rows):
-        if j == 0:
+    for k, sheet_key in enumerate(sheets_keys[0]):
+        big_row[sheet_key] = row[sheets_keys[0][sheet_key]].value
+    for i, sheet in enumerate(sheets):
+        if i == 0:
             continue
-        for k, sheet_key in enumerate(sheets_keys[i]):
-            big_row[sheet_key] = row[sheets_keys[i][sheet_key]].value
-            g = 0
+        if str(type(big_row[IN_SNILS[0]])) == "<class 'str'>":
+            if big_row[IN_SNILS[0]].strip() != '':
+                for jj, row in enumerate(sheets[i].rows):
+                    if str(type(row[sheets_keys[i][IN_SNILS[0]]].value)) == "<class 'str'>":
+                        if row[sheets_keys[i][IN_SNILS[0]]].value.strip() == big_row[IN_SNILS[0]].strip():
+                            for k, sheet_key in enumerate(sheets_keys[i]):
+                                big_row[sheet_key] = row[sheets_keys[i][sheet_key]].value
+                            break
+    g = 0
 
 
 stat_our2csv = [{'Имя':'Он они он','Возраст':25,'Вес':200},
