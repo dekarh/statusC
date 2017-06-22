@@ -1,16 +1,54 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import time
 import openpyxl
 # from openpyxl import Workbook
 import csv
+from lib import IN_NAME, IN_SNILS, IN_STAT, OUT_NAME, OUT_STAT
 
-workbook = openpyxl.load_workbook(filename=sys.argv[1], read_only=True)
-sheet = workbook.active
-g = 0
-for i, row in enumerate(sheet.rows):
-        for j, cell in enumerate(row):
-            g=0
+workbooks =  []
+sheets = []
+for i, xlsx_file in enumerate(sys.argv):
+    if i == 0:
+        continue
+    workbooks.append(openpyxl.load_workbook(filename=xlsx_file, read_only=True))
+    sheets.append(workbooks[i-1][workbooks[i-1].sheetnames[0]])
+#    for j, row in enumerate(sheets[i-1].rows):
+#        for k, cell in enumerate(row):
+#            g=0
+
+sheets_keys = []
+for i, sheet in enumerate(sheets):
+    keys = {}
+    for j, row in enumerate(sheet.rows):
+        if j > 0:
+            break
+        for k, cell in enumerate(row):
+            if cell.value in IN_SNILS:
+                keys['СНИЛС'] = k
+        if len(keys) > 0:
+            for k, cell in enumerate(row):
+                for name in IN_NAME:
+                    if cell.value != None:
+                        if cell.value == name:
+                            keys[name] = k
+        else:
+            print('В файле ' + sys.argv[i+1] + 'отсутствует колонка со СНИЛС')
+            time.sleep(3)
+            sys.exit()
+    sheets_keys.append(keys)
+
+
+for i, sheet in enumerate(sheets):
+    big_row = {}
+    for j, row in enumerate(sheet.rows):
+        if j == 0:
+            continue
+        for k, sheet_key in enumerate(sheets_keys[i]):
+            big_row[sheet_key] = row[sheets_keys[i][sheet_key]].value
+            g = 0
+
 
 stat_our2csv = [{'Имя':'Он они он','Возраст':25,'Вес':200},
          {'Имя':'Я я я','Возраст':31,'Вес':180}]
