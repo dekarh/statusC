@@ -5,7 +5,7 @@ import time
 import openpyxl
 # from openpyxl import Workbook
 import csv
-from lib import IN_NAME, IN_SNILS, IN_STAT_OUR, IN_STAT_FOND , OUT_NAME, OUT_STAT
+from lib import IN_NAME, IN_SNILS, IN_STAT_OUR, IN_STAT_FOND , OUT_NAME, OUT_STAT, l
 
 workbooks =  []
 sheets = []
@@ -29,7 +29,9 @@ for i, sheet in enumerate(sheets):                                    # Марк
                 keys[IN_SNILS[0]] = k
         if len(keys) > 0:
             for k, cell in enumerate(row):
-                for name in IN_NAME:
+                for n, name in enumerate(IN_NAME):
+                    if n == 0:
+                        continue
                     if cell.value != None:
                         if cell.value == name:
                             keys[name] = k
@@ -45,12 +47,14 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
     if j == 0:
         continue
     big_row = {}
-    for k, sheet_key in enumerate(sheets_keys[0]):
+    if l(row[sheets_keys[0][IN_SNILS[0]]].value) < 9999999999:
+        continue
+    for k, sheet_key in enumerate(sheets_keys[0]):                              # Из первого файла
         if row[sheets_keys[0][sheet_key]].value != None \
                 and str(row[sheets_keys[0][sheet_key]].value).strip() != '':
               # and str(row[sheets_keys[0][sheet_key]].value).strip() != '—'
             big_row[sheet_key] = str(row[sheets_keys[0][sheet_key]].value)
-    for i, sheet in enumerate(sheets):
+    for i, sheet in enumerate(sheets):                                          # Из всех остальных
         if i == 0:
             continue
         if str(type(big_row[IN_SNILS[0]])) == "<class 'str'>":
@@ -68,25 +72,40 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
                                     else:
                                         big_row[sheet_key] = str(row[sheets_keys[i][sheet_key]].value)
                             break
-    for i, name in enumerate(OUT_NAME): # Заполняем список-
-        if i == 0:
-            our_status[name] = big_row[name]
-        else:
-            our_status[name] = IN_STAT_OUR[name].index(big_row[name])
-    for i, name in enumerate(OUT_NAME):
-        if i == 0:
-            continue
+
+# OUT_STAT['Статус КоллЦентра'].index('Недозвон')
+
+    for i, name in enumerate(IN_NAME):          # Заполняем строку списка-словаря для csv файла статусами фонда
+        if i == 0 :
+            our_status[name] = big_row[name]    # СНИЛС
 # Вручную, Бумага принята только если в обоих полях Исправили или Наличие бумаги
         elif name == 'СтатусБумажногоНосителяПоДоговору' or name == 'СтатусБумажногоНосителяПоЗаявлению':
-            tek1 = big_row['СтатусБумажногоНосителяПоДоговору']
-            tek2 = big_row['СтатусБумажногоНосителяПоЗаявлению']
-            if (tek1 == 'Исправили' or tek1 == 'Наличие бумаги') and (tek2 == 'Исправили' or tek2 == 'Наличие бумаги'):
-                our_status[name] = OUT_STAT['Фонд - Статус бумаги'].index('Бумага принята')
-            else:
+            try:
+                tek1 = big_row['СтатусБумажногоНосителяПоДоговору']
+                tek2 = big_row['СтатусБумажногоНосителяПоЗаявлению']
+                if (tek1 == 'Исправили' or tek1 == 'Наличие бумаги') \
+                                and (tek2 == 'Исправили' or tek2 == 'Наличие бумаги'):
+                    our_status[name] = OUT_STAT['Фонд - Статус бумаги'].index('Бумага принята')
+                else:
+                    our_status[name] = OUT_STAT['Фонд - Статус бумаги'].index('Ошибка')
+            except KeyError:
                 our_status[name] = OUT_STAT['Фонд - Статус бумаги'].index('Ошибка')
         else:
-            our_status[name] = IN_STAT_FOND[name][big_row[name]]
-    g = 0
+            try:
+                our_status[name] = OUT_STAT[IN_STAT_FOND[name][big_row[name]][0]].index(IN_STAT_FOND[name][big_row[name]][1])             # IN_STAT_FOND[name][big_row[name]]
+            except KeyError:
+                our_status[name] = None
+# Заполняем строку списка-словаря для csv файла нашими статусами, если нет из фонда
+    for i, name in enumerate(IN_NAME):
+        if i == 0:
+            continue
+        else:
+            if our_status[name] == None:
+                try:
+                    our_status[name] = OUT_STAT[IN_STAT_OUR[name][big_row[name]][0]].index(IN_STAT_OUR[name][big_row[name]][1])
+                except KeyError:
+                    our_status[name] = None
+    our_statuses.append(our_status)
 
 
 
@@ -95,7 +114,7 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
 
         # our_statuses = [{'Имя':'Он они он','Возраст':25,'Вес':200}, {'Имя':'Я я я','Возраст':31,'Вес':180}]
 with open('statuses.csv', 'w', encoding='cp1251') as output_file:
-    dict_writer = csv.DictWriter(output_file, our_statuses[0].keys(), quoting=csv.QUOTE_NONNUMERIC)
+    dict_writer = csv.DictWriter(output_file, OUT_NAME, quoting=csv.QUOTE_NONNUMERIC)
     dict_writer.writeheader()
     dict_writer.writerows(our_statuses)
 output_file.close()
