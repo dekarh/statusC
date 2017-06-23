@@ -39,7 +39,9 @@ for i, sheet in enumerate(sheets):                                    # Марк
             sys.exit()
     sheets_keys.append(keys)
 
+our_statuses = []
 for j, row in enumerate(sheets[0].rows):                     # Загружаем все входные данные в одну строку
+    our_status = {}
     if j == 0:
         continue
     big_row = {}
@@ -53,7 +55,7 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
             continue
         if str(type(big_row[IN_SNILS[0]])) == "<class 'str'>":
             if big_row[IN_SNILS[0]].strip() != '':
-                for jj, row in enumerate(sheets[i].rows):
+                for row in sheets[i].rows:
                     if str(type(row[sheets_keys[i][IN_SNILS[0]]].value)) == "<class 'str'>":
                         if row[sheets_keys[i][IN_SNILS[0]]].value.strip() == big_row[IN_SNILS[0]].strip():
                             for k, sheet_key in enumerate(sheets_keys[i]):
@@ -66,22 +68,34 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
                                     else:
                                         big_row[sheet_key] = str(row[sheets_keys[i][sheet_key]].value)
                             break
+    for i, name in enumerate(OUT_NAME): # Заполняем список-
+        if i == 0:
+            our_status[name] = big_row[name]
+        else:
+            our_status[name] = IN_STAT_OUR[name].index(big_row[name])
+    for i, name in enumerate(OUT_NAME):
+        if i == 0:
+            continue
+# Вручную, Бумага принята только если в обоих полях Исправили или Наличие бумаги
+        elif name == 'СтатусБумажногоНосителяПоДоговору' or name == 'СтатусБумажногоНосителяПоЗаявлению':
+            tek1 = big_row['СтатусБумажногоНосителяПоДоговору']
+            tek2 = big_row['СтатусБумажногоНосителяПоЗаявлению']
+            if (tek1 == 'Исправили' or tek1 == 'Наличие бумаги') and (tek2 == 'Исправили' or tek2 == 'Наличие бумаги'):
+                our_status[name] = OUT_STAT['Фонд - Статус бумаги'].index('Бумага принята')
+            else:
+                our_status[name] = OUT_STAT['Фонд - Статус бумаги'].index('Ошибка')
+        else:
+            our_status[name] = IN_STAT_FOND[name][big_row[name]]
     g = 0
-#    for i, name in enumerate(OUT_NAME):
-
-             # Вручную, в обоих полях Исправили или Наличие бумаги
 
 
 
-stat_our2csv = [{'Имя':'Он они он','Возраст':25,'Вес':200}, {'Имя':'Я я я','Возраст':31,'Вес':180}]
-stat_fond2csv = [{'Имя':'Он они он','Возраст':25,'Вес':200}, {'Имя':'Я я я','Возраст':31,'Вес':180}]
-with open('stat_our.csv', 'w', encoding='cp1251') as output_file:
-    dict_writer = csv.DictWriter(output_file, stat_our2csv[0].keys(), quoting=csv.QUOTE_NONNUMERIC)
+
+
+
+        # our_statuses = [{'Имя':'Он они он','Возраст':25,'Вес':200}, {'Имя':'Я я я','Возраст':31,'Вес':180}]
+with open('statuses.csv', 'w', encoding='cp1251') as output_file:
+    dict_writer = csv.DictWriter(output_file, our_statuses[0].keys(), quoting=csv.QUOTE_NONNUMERIC)
     dict_writer.writeheader()
-    dict_writer.writerows(stat_our2csv)
-output_file.close()
-with open('stat_fond.csv', 'w', encoding='cp1251') as output_file:
-    dict_writer = csv.DictWriter(output_file, stat_fond2csv[0].keys(), quoting=csv.QUOTE_NONNUMERIC)
-    dict_writer.writeheader()
-    dict_writer.writerows(stat_fond2csv)
+    dict_writer.writerows(our_statuses)
 output_file.close()
