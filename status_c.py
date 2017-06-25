@@ -5,7 +5,7 @@ import time
 import openpyxl
 # from openpyxl import Workbook
 import csv
-from lib import IN_NAME, IN_SNILS, IN_STAT_OUR, IN_STAT_FOND , OUT_NAME, OUT_STAT, l
+from lib import IN_NAME, IN_SNILS, IN_STAT_OUR, IN_STAT_FOND , OUT_NAME, OUT_STAT, l, lenl
 
 workbooks =  []
 sheets = []
@@ -47,7 +47,7 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
     if j == 0:
         continue
     big_row = {}
-    if l(row[sheets_keys[0][IN_SNILS[0]]].value) < 9999999999:
+    if lenl(row[sheets_keys[0][IN_SNILS[0]]].value) != 11:
         continue
     for k, sheet_key in enumerate(sheets_keys[0]):                              # Из первого файла
         if row[sheets_keys[0][sheet_key]].value != None \
@@ -75,6 +75,13 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
 
 # OUT_STAT['Статус КоллЦентра'].index('Недозвон')
 
+    for i, name in enumerate(OUT_NAME):                                 # Заполняем our_status пустыми значениями(None)
+        try:
+            if our_status[name] == None:
+                q = 0
+        except KeyError:
+            our_status[name] = None
+
     for i, name in enumerate(IN_NAME):          # Заполняем строку списка-словаря для csv файла статусами фонда
         if i == 0 :
             our_status[name] = big_row[name]    # СНИЛС
@@ -85,36 +92,41 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
                 tek2 = big_row['СтатусБумажногоНосителяПоЗаявлению']
                 if (tek1 == 'Исправили' or tek1 == 'Наличие бумаги') \
                                 and (tek2 == 'Исправили' or tek2 == 'Наличие бумаги'):
-                    our_status[name] = OUT_STAT['Фонд - Статус бумаги'].index('Бумага принята')
+                    our_status['Фонд - Статус бумаги'] = OUT_STAT['Фонд - Статус бумаги'].index('Бумага принята')
                 else:
-                    our_status[name] = OUT_STAT['Фонд - Статус бумаги'].index('Ошибка')
+                    our_status['Фонд - Статус бумаги'] = OUT_STAT['Фонд - Статус бумаги'].index('Ошибка')
             except KeyError:
-                our_status[name] = OUT_STAT['Фонд - Статус бумаги'].index('Ошибка')
+                our_status['Фонд - Статус бумаги'] = OUT_STAT['Фонд - Статус бумаги'].index('Ошибка')
+            except ValueError:
+                q= 0
         else:
             try:
-                our_status[name] = OUT_STAT[IN_STAT_FOND[name][big_row[name]][0]].index(IN_STAT_FOND[name][big_row[name]][1])             # IN_STAT_FOND[name][big_row[name]]
+                our_status[IN_STAT_FOND[name][big_row[name]][0]] = \
+                    OUT_STAT[IN_STAT_FOND[name][big_row[name]][0]].index(IN_STAT_FOND[name][big_row[name]][1])
             except KeyError:
-                our_status[name] = None
+                q = 0
+            except ValueError:
+                q= 0
 # Заполняем строку списка-словаря для csv файла нашими статусами, если нет из фонда
     for i, name in enumerate(IN_NAME):
         if i == 0:
             continue
         else:
-            if our_status[name] == None:
-                try:
-                    our_status[name] = OUT_STAT[IN_STAT_OUR[name][big_row[name]][0]].index(IN_STAT_OUR[name][big_row[name]][1])
-                except KeyError:
-                    our_status[name] = None
+            try:
+                if our_status[IN_STAT_OUR[name][big_row[name]][0]] == None:
+                    our_status[IN_STAT_OUR[name][big_row[name]][0]] = \
+                        OUT_STAT[IN_STAT_OUR[name][big_row[name]][0]].index(IN_STAT_OUR[name][big_row[name]][1])
+            except KeyError:
+                q = 0
+            except ValueError:
+                q = 0
+
     our_statuses.append(our_status)
 
 
-
-
-
-
-        # our_statuses = [{'Имя':'Он они он','Возраст':25,'Вес':200}, {'Имя':'Я я я','Возраст':31,'Вес':180}]
+# our_statuses = [{'Имя':'Он они он','Возраст':25,'Вес':200}, {'Имя':'Я я я','Возраст':31,'Вес':180}]
 with open('statuses.csv', 'w', encoding='cp1251') as output_file:
-    dict_writer = csv.DictWriter(output_file, OUT_NAME, quoting=csv.QUOTE_NONNUMERIC)
+    dict_writer = csv.DictWriter(output_file, OUT_NAME) #, quoting=csv.QUOTE_NONNUMERIC)
     dict_writer.writeheader()
     dict_writer.writerows(our_statuses)
 output_file.close()
