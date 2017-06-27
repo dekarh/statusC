@@ -5,7 +5,7 @@ import time
 import openpyxl
 # from openpyxl import Workbook
 import csv
-from lib import IN_NAME, IN_SNILS, IN_STAT_OUR, IN_STAT_FOND , OUT_NAME, OUT_STAT, l, lenl
+from lib import IN_NAME, IN_SNILS, IN_STAT_OUR, IN_STAT_FOND , OUT_NAME, OUT_STAT, OUT_FOND_PAY, lenl
 
 workbooks =  []
 sheets = []
@@ -42,8 +42,10 @@ for i, sheet in enumerate(sheets):                                    # Марк
     sheets_keys.append(keys)
 
 our_statuses = []
+fond_pays = []
 for j, row in enumerate(sheets[0].rows):                     # Загружаем все входные данные в одну строку
     our_status = {}
+    fond_pay = {}
     if j == 0:
         continue
     big_row = {}
@@ -82,9 +84,19 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
         except KeyError:
             our_status[name] = None
 
+    for i, name in enumerate(OUT_FOND_PAY):                                 # Заполняем fond_pays пустыми значениями(None)
+        try:
+            if fond_pay[name] == None:
+                q = 0
+        except KeyError:
+            fond_pay[name] = None
+
+
     for i, name in enumerate(IN_NAME):          # Заполняем строку списка-словаря для csv файла статусами фонда
         if i == 0 :
             our_status[name] = big_row[name]    # СНИЛС
+            fond_pay[name] = big_row[name]
+
 # Вручную, Бумага принята только если в обоих полях Исправили или Наличие бумаги
         elif name == 'СтатусБумажногоНосителяПоДоговору' or name == 'СтатусБумажногоНосителяПоЗаявлению':
             try:
@@ -99,6 +111,14 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
                 our_status['Фонд - Статус бумаги'] = OUT_STAT['Фонд - Статус бумаги'].index('Ошибка')
             except ValueError:
                 q= 0
+        elif name == 'СтатусОплаты':
+            try:
+                fond_pay[IN_STAT_FOND[name][big_row[name]][0]] = \
+                    OUT_STAT[IN_STAT_FOND[name][big_row[name]][0]].index(IN_STAT_FOND[name][big_row[name]][1])
+            except KeyError:
+                q = 0
+            except ValueError:
+                q = 0
         else:
             try:
                 our_status[IN_STAT_FOND[name][big_row[name]][0]] = \
@@ -122,6 +142,8 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
                 q = 0
 
     our_statuses.append(our_status)
+    fond_pays.append(fond_pay)
+
 
 
 # our_statuses = [{'Имя':'Он они он','Возраст':25,'Вес':200}, {'Имя':'Я я я','Возраст':31,'Вес':180}]
@@ -129,4 +151,9 @@ with open('statuses.csv', 'w', encoding='cp1251') as output_file:
     dict_writer = csv.DictWriter(output_file, OUT_NAME) #, quoting=csv.QUOTE_NONNUMERIC)
     dict_writer.writeheader()
     dict_writer.writerows(our_statuses)
+output_file.close()
+with open('fond_pays.csv', 'w', encoding='cp1251') as output_file:
+    dict_writer = csv.DictWriter(output_file, OUT_FOND_PAY) #, quoting=csv.QUOTE_NONNUMERIC)
+    dict_writer.writeheader()
+    dict_writer.writerows(fond_pays)
 output_file.close()
