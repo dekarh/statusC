@@ -142,7 +142,8 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
                 q = 0
 
     our_statuses.append(our_status)
-    fond_pays.append(fond_pay)
+    if fond_pay[OUT_FOND_PAY[1]] != None:
+        fond_pays.append(fond_pay)
 
 
 
