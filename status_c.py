@@ -148,12 +148,12 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
 
 # our_statuses = [{'Имя':'Он они он','Возраст':25,'Вес':200}, {'Имя':'Я я я','Возраст':31,'Вес':180}]
 with open('statuses.csv', 'w', encoding='cp1251') as output_file:
-    dict_writer = csv.DictWriter(output_file, OUT_NAME) #, quoting=csv.QUOTE_NONNUMERIC)
+    dict_writer = csv.DictWriter(output_file, OUT_NAME, delimiter=';') #, quoting=csv.QUOTE_NONNUMERIC)
     dict_writer.writeheader()
     dict_writer.writerows(our_statuses)
 output_file.close()
 with open('fond_pays.csv', 'w', encoding='cp1251') as output_file:
-    dict_writer = csv.DictWriter(output_file, OUT_FOND_PAY) #, quoting=csv.QUOTE_NONNUMERIC)
+    dict_writer = csv.DictWriter(output_file, OUT_FOND_PAY, delimiter=';') #, quoting=csv.QUOTE_NONNUMERIC)
     dict_writer.writeheader()
     dict_writer.writerows(fond_pays)
 output_file.close()
