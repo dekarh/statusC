@@ -89,7 +89,7 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
                             break
 
 
-     for i, name in enumerate(OUT_NAME):                                 # Заполняем our_status пустыми значениями(None)
+    for i, name in enumerate(OUT_NAME):                                 # Заполняем our_status пустыми значениями(None)
         try:
             if our_status[name] == None:
                 q = 0
