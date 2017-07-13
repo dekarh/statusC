@@ -41,6 +41,19 @@ for i, sheet in enumerate(sheets):                                    # Марк
             sys.exit()
     sheets_keys.append(keys)
 
+without = True
+for i, sheet in enumerate(sheets):
+    if len(sheets_keys[i]) > 1:
+        print('\nВ файле ' + sys.argv[i+1] + ' найдены столбцы:')
+        for q in sheets_keys[i].keys():
+            print('    ' + q)
+        without = False
+if without:
+    print('Во всех файлах нет никаких столбцов, кроме СНИЛС')
+    time.sleep(3)
+    sys.exit()
+print('\n Начинаем расчет \n')
+
 our_statuses = []
 fond_pays = []
 for j, row in enumerate(sheets[0].rows):                     # Загружаем все входные данные в одну строку
@@ -75,9 +88,8 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
                                         big_row[sheet_key] = str(row[sheets_keys[i][sheet_key]].value)
                             break
 
-# OUT_STAT['Статус КоллЦентра'].index('Недозвон')
 
-    for i, name in enumerate(OUT_NAME):                                 # Заполняем our_status пустыми значениями(None)
+     for i, name in enumerate(OUT_NAME):                                 # Заполняем our_status пустыми значениями(None)
         try:
             if our_status[name] == None:
                 q = 0
@@ -141,9 +153,18 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
             except ValueError:
                 q = 0
 
-    our_statuses.append(our_status)
+    without = True
+    for i, stat in our_status:
+        if i == 0:
+            continue
+        if stat != None:
+            without = False
+    if not without:
+        our_statuses.append(our_status)
     if fond_pay[OUT_FOND_PAY[1]] != None:
         fond_pays.append(fond_pay)
+    if fond_pay[OUT_FOND_PAY[1]] != None and not without:
+        print('Обработан ' + big_row['СНИЛС'])
 
 
 
