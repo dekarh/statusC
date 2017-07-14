@@ -2,6 +2,7 @@
 
 import sys
 import time
+import datetime
 import openpyxl
 # from openpyxl import Workbook
 import csv
@@ -52,10 +53,13 @@ if without:
     print('Во всех файлах нет никаких столбцов, кроме СНИЛС')
     time.sleep(3)
     sys.exit()
-print('\n Начинаем расчет \n')
+
+print('\n'+ datetime.datetime.now().strftime("%H:%M:%S") +'Начинаем расчет \n')
 
 our_statuses = []
 fond_pays = []
+total_rows = sheets[0].max_row
+perc_rows = 0
 for j, row in enumerate(sheets[0].rows):                     # Загружаем все входные данные в одну строку
     our_status = {}
     fond_pay = {}
@@ -154,19 +158,26 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
                 q = 0
 
     without = True
-    for i, stat in our_status:
+    for i, stat in enumerate(our_status):
         if i == 0:
             continue
         if stat != None:
             without = False
+    p_status = 'Пропущены'
+    p_pay = 'Не оплачено - строка пропущена'
     if not without:
         our_statuses.append(our_status)
+        p_status = 'Добавлены'
+
     if fond_pay[OUT_FOND_PAY[1]] != None:
         fond_pays.append(fond_pay)
-    if fond_pay[OUT_FOND_PAY[1]] != None and not without:
-        print('Обработан ' + big_row['СНИЛС'])
+        p_pay = 'Оплачено - строка добавлена'
 
+    if int(j/total_rows*100) > perc_rows:
+        perc_rows = int(j/total_rows*100)
+        print(datetime.datetime.now().strftime("%H:%M:%S") + '  обработано ' + str(perc_rows) + '%')
 
+#    print(big_row['СНИЛС'] + ' Статусы: ' + p_status + ' Оплата: ' + p_pay)
 
 # our_statuses = [{'Имя':'Он они он','Возраст':25,'Вес':200}, {'Имя':'Я я я','Возраст':31,'Вес':180}]
 with open('statuses.csv', 'w', encoding='cp1251') as output_file:
