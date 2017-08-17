@@ -19,6 +19,13 @@ for i, xlsx_file in enumerate(sys.argv):                              # Загр
 #        for k, cell in enumerate(row):
 #            g=0
 
+a = sys.argv[1]
+if len(a.split('/')) > 1:
+    path = '/'.join(a.split('/')[:len(a.split('/'))-1])+'/'              # только путь без имени файла
+else:
+    path = ''
+
+
 sheets_keys = []
 for i, sheet in enumerate(sheets):                                    # Маркируем нужные столбцы
     keys = {}
@@ -37,7 +44,7 @@ for i, sheet in enumerate(sheets):                                    # Марк
                         if cell.value == name:
                             keys[name] = k
         else:
-            print('В файле ' + sys.argv[i+1] + 'отсутствует колонка со СНИЛС')
+#            print('В файле "' + sys.argv[i+1] + '" отсутствует колонка со СНИЛС')
             time.sleep(3)
             sys.exit()
     sheets_keys.append(keys)
@@ -45,16 +52,16 @@ for i, sheet in enumerate(sheets):                                    # Марк
 without = True
 for i, sheet in enumerate(sheets):
     if len(sheets_keys[i]) > 1:
-        print('\nВ файле ' + sys.argv[i+1] + ' найдены столбцы:')
-        for q in sheets_keys[i].keys():
-            print('    ' + q)
+#        print('\nВ файле "' + sys.argv[i+1] + '" найдены столбцы:')
+#        for q in sheets_keys[i].keys():
+#            print('    ' + q)
         without = False
 if without:
-    print('Во всех файлах нет никаких столбцов, кроме СНИЛС')
+#    print('Во всех файлах нет никаких столбцов, кроме СНИЛС')
     time.sleep(3)
     sys.exit()
 
-print('\n'+ datetime.datetime.now().strftime("%H:%M:%S") +'Начинаем расчет \n')
+    #print('\n'+ datetime.datetime.now().strftime("%H:%M:%S") +' Начинаем расчет \n')
 
 our_statuses = []
 fond_pays = []
@@ -175,17 +182,17 @@ for j, row in enumerate(sheets[0].rows):                     # Загружае�
 
     if int(j/total_rows*100) > perc_rows:
         perc_rows = int(j/total_rows*100)
-        print(datetime.datetime.now().strftime("%H:%M:%S") + '  обработано ' + str(perc_rows) + '%')
+#        print(datetime.datetime.now().strftime("%H:%M:%S") + '  обработано ' + str(perc_rows) + '%')
 
 #    print(big_row['СНИЛС'] + ' Статусы: ' + p_status + ' Оплата: ' + p_pay)
 
 # our_statuses = [{'Имя':'Он они он','Возраст':25,'Вес':200}, {'Имя':'Я я я','Возраст':31,'Вес':180}]
-with open('statuses.csv', 'w', encoding='cp1251') as output_file:
+with open(path + 'statuses.csv', 'w', encoding='cp1251') as output_file:
     dict_writer = csv.DictWriter(output_file, OUT_NAME, delimiter=';') #, quoting=csv.QUOTE_NONNUMERIC)
     dict_writer.writeheader()
     dict_writer.writerows(our_statuses)
 output_file.close()
-with open('fond_pays.csv', 'w', encoding='cp1251') as output_file:
+with open(path + 'fond_pays.csv', 'w', encoding='cp1251') as output_file:
     dict_writer = csv.DictWriter(output_file, OUT_FOND_PAY, delimiter=';') #, quoting=csv.QUOTE_NONNUMERIC)
     dict_writer.writeheader()
     dict_writer.writerows(fond_pays)
